@@ -23,19 +23,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 //route import
-// import userRouter from "./routes/user.routes.js";
-// import videoRouter from "./routes/video.route.js";
-// import subscriptionRouter from "./routes/subscription.routes.js";
-// import playlistRouter from "./routes/playlist.routes.js";
-// import songsRouter from "./routes/songs.routes.js";
+import urlsRouter from "./routes/urls.js";
+
+app.use('',urlsRouter);
 
 app.get("/", (req, res) => {
   res.status(200).send("Welcome to the VStream");
 });
 
-// app.use("/api/v1/users", userRouter);
-// app.use("/api/v1/videos", videoRouter);
-// app.use("/api/v1/subscription", subscriptionRouter);
-// app.use("/api/v1/playlist", playlistRouter);
-// app.use("/api/v1/songs", songsRouter);
 export { app };
