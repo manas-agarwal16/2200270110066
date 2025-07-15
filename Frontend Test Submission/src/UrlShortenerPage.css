@@ -1,0 +1,76 @@
+.shortener-container {
+  max-width: 600px;
+  margin: 30px auto;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  background: #f9f9f9;
+  font-family: sans-serif;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.url-entry {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+  position: relative;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.url-entry input {
+  padding: 8px;
+  margin-bottom: 8px;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+}
+
+.remove-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  background: #ff4d4f;
+  border: none;
+  color: white;
+  padding: 3px 7px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.controls button {
+  padding: 8px 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #007bff;
+  color: white;
+}
+
+.controls button:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}
+
+.result {
+  margin-top: 5px;
+  font-size: 0.9em;
+  background: #e6f7ff;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+.error {
+  color: red;
+  font-size: 0.9em;
+}

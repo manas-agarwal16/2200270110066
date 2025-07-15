@@ -71,7 +71,7 @@ export const createShortUrl = async (req, res) => {
     const newUrl = new Url({ url, shortCode: codeToUse, expiry });
     await newUrl.save();
 
-    const shortLink = `${req.protocol}://${req.get("host")}/${codeToUse}`;
+    const shortLink = `${req.protocol}://${req.get("host")}/shorturls/${codeToUse}`;
 
     return res.status(201).json(
       new ApiResponse(201, {
@@ -94,6 +94,9 @@ export const createShortUrl = async (req, res) => {
 export const getShortUrlStats = async (req, res) => {
   try {
     const { shortCode } = req.params;
+
+    console.log('shortCode:', shortCode);
+    
 
     // Validate shortCode
     if (!shortCode || typeof shortCode !== "string") {
@@ -124,21 +127,23 @@ export const getShortUrlStats = async (req, res) => {
 
     await foundUrl.save();
 
+    return res.redirect(foundUrl.url);
+
     // Log the successful retrieval
-    return res.status(200).json(
-      new ApiResponse(200, {
-        originalUrl: foundUrl.url,
-        shortCode: foundUrl.shortCode,
-        createdAt: foundUrl.createdAt,
-        expiry: foundUrl.expiry,
-        totalClicks: foundUrl.clicks,
-        clickHistory: foundUrl.clickData.map((click) => ({
-          timestamp: click.timestamp,
-          userAgent: click.userAgent,
-          ip: click.ip,
-        })),
-      })
-    );
+    // return res.status(200).json(
+    //   new ApiResponse(200, {
+    //     originalUrl: foundUrl.url,
+    //     shortCode: foundUrl.shortCode,
+    //     createdAt: foundUrl.createdAt,
+    //     expiry: foundUrl.expiry,
+    //     totalClicks: foundUrl.clicks,
+    //     clickHistory: foundUrl.clickData.map((click) => ({
+    //       timestamp: click.timestamp,
+    //       userAgent: click.userAgent,
+    //       ip: click.ip,
+    //     })),
+    //   })
+    // );
   } catch (err) {
     console.error(err);
     await Log("backend", "error", "route", `Error retrieving short URL: ${err.message}`);
