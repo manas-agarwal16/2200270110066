@@ -25,7 +25,7 @@ app.use(express.static("public"));
 //route import
 import urlsRouter from "./routes/urls.js";
 
-app.use('',urlsRouter);
+app.use("", urlsRouter);
 
 app.get("/", (req, res) => {
   res.status(200).send("Welcome to the VStream");

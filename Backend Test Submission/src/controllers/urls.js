@@ -81,6 +81,7 @@ export const createShortUrl = async (req, res) => {
     );
   } catch (err) {
     console.error(err);
+    await Log("backend", "error", "route", `Error creating short URL: ${err.message}`);
     return res.status(500).json({ error: "Server error" });
   }
 };
@@ -90,34 +91,57 @@ export const createShortUrl = async (req, res) => {
  * Redirects to the original URL if valid and not expired
  */
 
-export const redirectToOriginalUrl = asyncHandler(async (req, res) => {
+export const getShortUrlStats = async (req, res) => {
   try {
     const { shortCode } = req.params;
+
+    // Validate shortCode
+    if (!shortCode || typeof shortCode !== "string") {
+      await Log("backend", "error", "route", `Invalid shortCode: ${shortCode}`);
+      return res.status(400).json(new ApiError(400, "Invalid shortCode"));
+    }
 
     const foundUrl = await Url.findOne({ shortCode });
 
     if (!foundUrl) {
-      await Log(
-        "backend",
-        "error",
-        "route",
-        `Short URL not found: ${shortCode}`
-      );
-
-      return res.status(404).json({ error: "Short URL not found" });
+        await Log("backend", "error", "route", `Short URL not found: ${shortCode}`);
+      return res.status(404).json(new ApiError(404, "Short URL not found"));
     }
 
-    const now = new Date();
-    if (foundUrl.expiry < now) {
-      await Log("backend", "error", "route", `Short URL expired: ${shortCode}`);
-      return res.status(410).json({ error: "Short URL has expired" });
+    // Check if expired
+    if (foundUrl.expiry < new Date()) {
+        await Log("backend", "error", "route", `Short URL expired: ${shortCode}`);
+      return res.status(410).json(new ApiError(410, 'Short URL expired'));
     }
 
-    return res.redirect(foundUrl.originalUrl);
+    // Increment click count and log click data
+    foundUrl.clicks += 1;
+    foundUrl.clickData.push({
+      timestamp: new Date(),
+      userAgent: req.headers["user-agent"],
+      ip: req.ip || req.connection.remoteAddress,
+    });
+
+    await foundUrl.save();
+
+    // Log the successful retrieval
+    return res.status(200).json(
+      new ApiResponse(200, {
+        originalUrl: foundUrl.url,
+        shortCode: foundUrl.shortCode,
+        createdAt: foundUrl.createdAt,
+        expiry: foundUrl.expiry,
+        totalClicks: foundUrl.clicks,
+        clickHistory: foundUrl.clickData.map((click) => ({
+          timestamp: click.timestamp,
+          userAgent: click.userAgent,
+          ip: click.ip,
+        })),
+      })
+    );
   } catch (err) {
     console.error(err);
-    await Log("backend", "error", "route", `Error in redirect: ${err.message}`);
-    
-    return res.status(500).json({ error: "Server error" });
+    await Log("backend", "error", "route", `Error retrieving short URL: ${err.message}`);
+    return res.status(500).json(new ApiError(500, "Server error"));
   }
-});
+};
