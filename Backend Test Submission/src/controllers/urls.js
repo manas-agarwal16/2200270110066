@@ -71,13 +71,12 @@ export const createShortUrl = async (req, res) => {
     const newUrl = new Url({ url, shortCode: codeToUse, expiry });
     await newUrl.save();
 
-    const shortLink = `${req.protocol}://${req.get(
-      "host"
-    )}/shorturls/${codeToUse}`;
+    const shortLink = `${req.protocol}://${req.get("host")}/${codeToUse}`;
 
     return res.status(201).json(
       new ApiResponse(201, {
         shortLink,
+        shortCode,
         expiry: expiry.toISOString(),
       })
     );
@@ -98,11 +97,9 @@ export const createShortUrl = async (req, res) => {
  * Redirects to the original URL if valid and not expired
  */
 
-export const getShortUrlStats = async (req, res) => {
+export const visitURL = asyncHandler(async (req, res) => {
   try {
     const { shortCode } = req.params;
-
-    console.log("shortCode:", shortCode);
 
     // Validate shortCode
     if (!shortCode || typeof shortCode !== "string") {
@@ -119,7 +116,7 @@ export const getShortUrlStats = async (req, res) => {
         "route",
         `Short URL not found: ${shortCode}`
       );
-      return res.status(404).json(new ApiError(404, "Short URL not found"));
+      return res.status(404).json(new ApiError(404, "Short URL not found 1"));
     }
 
     // Check if expired
@@ -139,22 +136,61 @@ export const getShortUrlStats = async (req, res) => {
     await foundUrl.save();
 
     return res.redirect(foundUrl.url);
+  } catch (err) {
+    console.error(err);
+    await Log(
+      "backend",
+      "error",
+      "route",
+      `Error retrieving short URL: ${err.message}`
+    );
+    return res.status(500).json(new ApiError(500, "Server error"));
+  }
+});
+
+export const getShortUrlStats = async (req, res) => {
+  try {
+    const { shortCode } = req.params;
+
+    // Validate shortCode
+    if (!shortCode || typeof shortCode !== "string") {
+      await Log("backend", "error", "route", `Invalid shortCode: ${shortCode}`);
+      return res.status(400).json(new ApiError(400, "Invalid shortCode"));
+    }
+
+    const foundUrl = await Url.findOne({ shortCode });
+
+    if (!foundUrl) {
+      await Log(
+        "backend",
+        "error",
+        "route",
+        `Short URL not found: ${shortCode}`
+      );
+      return res.status(404).json(new ApiError(404, "Short URL not found 2"));
+    }
+
+    // Check if expired
+    if (foundUrl.expiry < new Date()) {
+      await Log("backend", "error", "route", `Short URL expired: ${shortCode}`);
+      return res.status(410).json(new ApiError(410, "Short URL expired"));
+    }
 
     // Log the successful retrieval
-    // return res.status(200).json(
-    //   new ApiResponse(200, {
-    //     originalUrl: foundUrl.url,
-    //     shortCode: foundUrl.shortCode,
-    //     createdAt: foundUrl.createdAt,
-    //     expiry: foundUrl.expiry,
-    //     totalClicks: foundUrl.clicks,
-    //     clickHistory: foundUrl.clickData.map((click) => ({
-    //       timestamp: click.timestamp,
-    //       userAgent: click.userAgent,
-    //       ip: click.ip,
-    //     })),
-    //   })
-    // );
+    return res.status(200).json(
+      new ApiResponse(200, {
+        originalUrl: foundUrl.url,
+        shortCode: foundUrl.shortCode,
+        createdAt: foundUrl.createdAt,
+        expiry: foundUrl.expiry,
+        totalClicks: foundUrl.clicks,
+        clickHistory: foundUrl.clickData.map((click) => ({
+          timestamp: click.timestamp,
+          userAgent: click.userAgent,
+          ip: click.ip,
+        })),
+      })
+    );
   } catch (err) {
     console.error(err);
     await Log(
@@ -166,51 +202,3 @@ export const getShortUrlStats = async (req, res) => {
     return res.status(500).json(new ApiError(500, "Server error"));
   }
 };
-
-export const getStatistics = asyncHandler(async (req, res) => {
-  try {
-    const { shortCode } = req.params;
-
-    if (!shortCode || typeof shortCode !== "string") {
-      await Log("backend", "error", "route", `Invalid shortCode: ${shortCode}`);
-      return res.status(400).json(new ApiError(400, "Invalid shortCode"));
-    }
-
-    // Fetch statistics from the database
-    const urlStats = await Url.findOne({ shortCode });
-
-    if (!urlStats) {
-      await Log(
-        "backend",
-        "error",
-        "route",
-        `Short URL not found: ${shortCode}`
-      );
-      return res.status(404).json(new ApiError(404, "Short URL not found"));
-    }
-
-    return res.status(200).json(
-      new ApiResponse(200, {
-        originalUrl: urlStats.url,
-        shortCode: urlStats.shortCode,
-        createdAt: urlStats.createdAt,
-        expiry: urlStats.expiry,
-        totalClicks: urlStats.clicks,
-        clickHistory: urlStats.clickData.map((click) => ({
-          timestamp: click.timestamp,
-          userAgent: click.userAgent,
-          ip: click.ip,
-        })),
-      })
-    );
-  } catch (error) {
-    await Log(
-      "backend",
-      "error",
-      "route",
-      `Error fetching statistics for short URL: ${error.message}`
-    );
-    console.error("Error fetching statistics:", error);
-    return res.status(500).json(new ApiError(500, "Server error"));
-  }
-});

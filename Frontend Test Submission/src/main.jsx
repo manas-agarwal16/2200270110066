@@ -1,12 +1,12 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
-import { Provider } from "react-redux";
 import {
   RouterProvider,
   createBrowserRouter,
 } from "react-router-dom";
 
 import UrlShortenerPage from "./pages/urlShortenerPage.jsx";
+import StatisticsPage from "./pages/StatisticsPage.jsx";
 
 const router = createBrowserRouter([
   {
@@ -17,6 +17,10 @@ const router = createBrowserRouter([
         path: "",
         element: <UrlShortenerPage />,
       },
+      {
+        path: "shorturls/:shortCode",
+        element: <StatisticsPage />,
+      }
     ],
   },
 ]);
