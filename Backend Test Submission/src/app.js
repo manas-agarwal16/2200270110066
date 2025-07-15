@@ -7,8 +7,6 @@ const app = express();
 
 const allowedOrigins = process.env.CORS_ORIGIN?.split(",");
 
-console.log("Allowed Origins:", allowedOrigins);
-
 
 app.use(
   cors({
@@ -35,7 +33,6 @@ app.use(express.static("public"));
 
 //route import
 import urlsRouter from "./routes/urls.js";
-import { Log } from "../../Logging Middleware/logger.js";
 
 app.use("", urlsRouter);
 

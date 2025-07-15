@@ -76,7 +76,7 @@ export const createShortUrl = async (req, res) => {
     return res.status(201).json(
       new ApiResponse(201, {
         shortLink,
-        shortCode,
+        shortCode: codeToUse,
         expiry: expiry.toISOString(),
       })
     );

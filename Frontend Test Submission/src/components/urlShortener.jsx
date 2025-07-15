@@ -10,6 +10,8 @@ export default function UrlShortener() {
     { url: "", validity: "", shortCode: "", result: null, error: null },
   ]);
 
+  const [shortCodes , setShortCodes] = useState([]);
+
   const handleChange = (index, field, value) => {
     const newUrls = [...urls];
     newUrls[index][field] = value;
@@ -48,6 +50,7 @@ export default function UrlShortener() {
     const newUrls = await Promise.all(
       urls.map(async (entry) => {
         const { url, validity, shortCode } = entry;
+
 
         // Validation
         if (!url || !isValidUrl(url)) {
@@ -92,6 +95,9 @@ export default function UrlShortener() {
             );
             throw new Error(data?.error || "Short Code Already Exists");
           }
+          console.log("data", data );
+          
+          setShortCodes((prevCodes) => [data?.data?.shortCode, ...prevCodes]);
 
           return { ...entry, result: data.data, error: null };
         } catch (err) {
@@ -163,7 +169,7 @@ export default function UrlShortener() {
                     marginRight: "20px",
                     color: "#7cb8ff",
                   }}
-                  href={`http://localhost:3000/shorturls/${urls[index]?.shortCode}`}
+                  href={`http://localhost:3000/shorturls/${shortCodes[index]}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
